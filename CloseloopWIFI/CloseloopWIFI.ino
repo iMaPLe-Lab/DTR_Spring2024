@@ -32,19 +32,14 @@ int* ptrAttKill         = &attKill;
 unsigned long lastUpdate = 0; // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
 
-
-//////// Define const ////////////
-#define CATCHSPEED 250
-#define HOLDSPEED 100
-
-int pre_throttlePress = 0;
-long firstPress;
-double goal_yaw_set = 0;
-double goal_yaw = 0;
-double goal_pressure = 0;
-SensorOutputs sensorData;
-int fowardpess = 0;
-// int catchState = 0;
+double target_yaw = 0;
+double target_alt = 0;
+int powerLeft = 0;
+int powerRight = 0;
+int powerUp = 0;
+int forward = 0;
+int turn = 0;
+int up = 0;
 
 
 // Arduino loop function. Runs in CPU 1
@@ -103,7 +98,7 @@ void loop() {
           } else if (abs(leftJoystickY) > 1){
             forward = 0;
           }
-          forward = constrain(forward, -200, 200)
+          forward = constrain(forward, -200, 200);
 
           // Kill altitude
           if (attKill){

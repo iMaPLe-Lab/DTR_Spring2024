@@ -54,8 +54,8 @@ void runMotors(int powerLeft, int powerRight, int powerUp){
     motorUp->run(FORWARD);
   }
 
-  motorLeft->setSpeed(constrain(abs(powerLF), 0, 250));
-  motorRight->setSpeed(constrain(abs(powerRF), 0, 250));
-  motorUp->setSpeed(constrain(abs(powerRB), 0, 250));
+  motorLeft->setSpeed(constrain(abs(powerLeft), 0, 250));
+  motorRight->setSpeed(constrain(abs(powerRight), 0, 250));
+  motorUp->setSpeed(constrain(abs(powerUp), 0, 250));
 
 }

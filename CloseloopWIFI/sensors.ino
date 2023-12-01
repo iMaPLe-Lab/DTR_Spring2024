@@ -1,11 +1,10 @@
+#include <Arduino.h>
 #include <Wire.h>
+#include "Adafruit_VL53L1X.h"
+#include <Adafruit_BNO08x.h>
+
 
 //////////// TOF Constants ////////////
-#include "Adafruit_VL53L1X.h"
-
-#define BNO08X_RESET -1
-Adafruit_BNO08x  bno08x(BNO08X_RESET);
-
 #define IRQ_PIN 2
 #define XSHUT_PIN 3
 
@@ -13,12 +12,16 @@ Adafruit_VL53L1X vl53 = Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN);
 
 
 //////////// IMU Constants ////////////
-#include <Adafruit_BNO08x.h>
+#define BNO08X_RESET -1
+
 struct euler_t {
   float yaw;
   float pitch;
   float roll;
 } ypr;
+
+Adafruit_BNO08x  bno08x(BNO08X_RESET);
+sh2_SensorValue_t sensorValue;
 
 #ifdef FAST_MODE
   // Top frequency is reported to be 1000Hz (but freq is somewhat variable)
@@ -31,7 +34,7 @@ struct euler_t {
 #endif
 void setReports(sh2_SensorId_t reportType, long report_interval) {
   Serial.println("Setting desired reports");
-  if (!bno08x.enableReport(reportType, report_interval)) {
+  if (! bno08x.enableReport(reportType, report_interval)) {
     Serial.println("Could not enable stabilized remote vector");
   }
 }

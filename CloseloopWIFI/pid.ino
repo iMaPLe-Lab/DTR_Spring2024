@@ -6,26 +6,44 @@ double previous_error_yaw = 0;
 double previous_error_altitude = 0;
 
 // PID constants
-const double kp_yaw = 3.0;
-const double ki_yaw = 0.001;
-const double kd_yaw = 0.05;
-const double kp_alt = 1000.0;
-const double ki_alt = 0.1;
-const double kd_alt = 0.5;
+const double kp = 1.5;
+const double ki = 0.001;
+const double kd = 0.01;
+const double kp_alt = 3000.0;
+const double ki_alt = 0.2;
+const double kd_alt = 20.0;
+
+const double kp_f = 3.8;
+const double ki_f = 0.000;
+const double kd_f = 0.0;
+
+double angle_difference(double angle1, double angle2) { //angle1 current , angle2 target 
+    double difference = angle2 - angle1;
+    if (difference > 180) {
+        difference -= 360;
+    } else if (difference < -180) {
+        difference += 360;
+    }
+    return difference;
+}
 
 double computePID_yaw(double goal_yaw, double current_yaw) {
-
-  double error_yaw = goal_yaw - current_yaw;
+  double error_yaw = angle_difference(current_yaw, goal_yaw);
   integral_yaw += error_yaw;
-
   double derivative_yaw = error_yaw - previous_error_yaw;
   previous_error_yaw = error_yaw;
-
-  double output_yaw = kp_yaw * error_yaw + ki_yaw * integral_yaw + kd_yaw * derivative_yaw;
-
+  double output_yaw = kp * error_yaw + ki * integral_yaw + kd * derivative_yaw;
   return output_yaw;
 }
 
+double computePID_yaw_fw(double goal_yaw, double current_yaw) {
+  double error_yaw = angle_difference(current_yaw, goal_yaw);
+  integral_yaw += error_yaw;
+  double derivative_yaw = error_yaw - previous_error_yaw;
+  previous_error_yaw = error_yaw;
+  double output_yaw = kp_f * error_yaw + ki_f * integral_yaw + kd_f * derivative_yaw;
+  return output_yaw;
+}
 
 double computePID_altitude(double goal_altitude, double current_altitude) {
 

@@ -6,8 +6,7 @@ void setup() {
 
   //////////// Motor setup ////////////
   motorSetup();
-  AFMSbot.begin(); // Start the bottom shield
-  AFMStop.begin(); // Start the top shield
+  AFMS.begin();
 
 
   //////////// Wifi setup ////////////
