@@ -1,6 +1,11 @@
 
 #include <WiFi.h>
 #include <Arduino.h>
+#include <Wire.h>
+#include "Adafruit_VL53L1X.h"
+#include <Adafruit_BNO08x.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <Adafruit_MotorShield.h>
 
 // Set the IP address and port to match the server you're connecting to
 IPAddress serverIP(192, 168, 50, 93);

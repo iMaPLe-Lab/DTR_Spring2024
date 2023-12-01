@@ -1,7 +1,6 @@
 
 //////////// Set up motors and shields ////////////
-#include <Adafruit_PWMServoDriver.h>
-#include <Adafruit_MotorShield.h>
+
 
 // Adafruit_MotorShield AFMStop(0x61); // Rightmost jumper closed
 Adafruit_MotorShield AFMS(0x60); 
