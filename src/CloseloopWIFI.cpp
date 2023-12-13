@@ -1,10 +1,10 @@
 
-#include <WiFi.h>
-#include <Arduino.h>
-#include <Wire.h>
+#include "WiFi.h"
+#include "Arduino.h"
+#include "Wire.h"
 #include "Adafruit_VL53L1X.h"
-#include <Adafruit_BNO08x.h>
-#include <Adafruit_MotorShield.h>
+#include "Adafruit_BNO08x.h"
+#include "Adafruit_MotorShield.h"
 #include "motorcontrol.h"
 #include "pid.h"
 #include "sensors.h"
@@ -103,7 +103,7 @@ void loop() {
           else { // hold target yaw with PID
             turn = computePID_yaw(target_yaw, readIMU());
           }
-          constrain(turn, -200, 200);
+          turn = constrain(turn, -200, 200);
 
           // Direction control
           if (abs(leftJoystickY) > 30){
