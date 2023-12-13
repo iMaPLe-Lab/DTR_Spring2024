@@ -4,17 +4,25 @@
 #include <Wire.h>
 #include "Adafruit_VL53L1X.h"
 #include <Adafruit_BNO08x.h>
-#include <Adafruit_PWMServoDriver.h>
 #include <Adafruit_MotorShield.h>
+#include "motorcontrol.h"
+#include "pid.h"
+#include "sensors.h"
+#include "wificonnection.h"
+#include "setup.h"
 
-// Set the IP address and port to match the server you're connecting to
-IPAddress serverIP(192, 168, 50, 93);
-const uint16_t serverPort = 10000;
-const char* ssid = "ZhouLab";
-const char* password = "ZhouRobotics917";
+// Define custom functions
+void motorSetup();
+void runMotors(int powerLeft, int powerRight, int powerUp);
+double angle_difference(double angle1, double angle2);
+double computePID_yaw(double goal_yaw, double current_yaw);
+double computePID_yaw_fw(double goal_yaw, double current_yaw);
+double computePID_altitude(double goal_altitude, double current_altitude);
+String readInteger(WiFiClient& client);
+void processData(String data, int* ptrLY, int* ptrRX, int* ptrTru, int* ptrBreak, int* ptrCat, int* ptrAtt);
+void setReports(sh2_SensorId_t reportType, long report_interval);
+void sensorSetup();
 
-// Create an instance of the WiFiServer class
-WiFiServer server(serverPort);
 
 //////// Define global variables ////////////
 int leftJoystickX   = 0;  // (-511 - 512) left X axis
@@ -95,7 +103,7 @@ void loop() {
           else { // hold target yaw with PID
             turn = computePID_yaw(target_yaw, readIMU());
           }
-          turn = constrain(turn, -200, 200);        
+          constrain(turn, -200, 200);
 
           // Direction control
           if (abs(leftJoystickY) > 30){

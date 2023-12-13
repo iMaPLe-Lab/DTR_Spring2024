@@ -1,3 +1,11 @@
+// Set the IP address and port to match the server you're connecting to
+IPAddress serverIP(192, 168, 50, 93);
+const uint16_t serverPort = 10000;
+const char* ssid = "ZhouLab";
+const char* password = "ZhouRobotics917";
+
+// Create an instance of the WiFiServer class
+WiFiServer server(serverPort);
 
 void setup() {
   Serial.begin(115200);
