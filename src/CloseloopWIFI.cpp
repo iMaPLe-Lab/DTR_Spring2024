@@ -45,8 +45,8 @@ int* ptrAttKill         = &attKill;
 unsigned long lastUpdate = 0; // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
 
-double target_yaw = 0;
-double target_alt = 0;
+
+double target_alt = 100; // mm
 int powerLeft = 0;
 int powerRight = 0;
 int powerUp = 0;
@@ -69,17 +69,17 @@ void loop() {
           String result = readInteger(client);
           // processData(result, ptrRightJoystickX, ptrLeftJoystickY, ptrThrust, ptrBreak, ptrcatchs, ptrstable);
           processData(result, ptrLeftJoystickY, ptrRightJoystickX, ptrThrottlebutton, ptrBrakebutton, ptrCatchs, ptrAttKill);
-          Serial.print(leftJoystickY);
-          Serial.print(", ");
-          Serial.print(rightJoystickX);
-          Serial.print(", ");
-          Serial.print(Throttlebutton);
-          Serial.print(", ");
-          Serial.print(Brakebutton);
-          Serial.print(", ");
-          Serial.print(catchs);
-          Serial.print(", ");
-          Serial.println(attKill);
+          // Serial.print(leftJoystickY);
+          // Serial.print(", ");
+          // Serial.print(rightJoystickX);
+          // Serial.print(", ");
+          // Serial.print(Throttlebutton);
+          // Serial.print(", ");
+          // Serial.print(Brakebutton);
+          // Serial.print(", ");
+          // Serial.print(catchs);
+          // Serial.print(", ");
+          // Serial.println(attKill);
 
           // Altitude control
           if (Throttlebutton > 30){
@@ -121,8 +121,17 @@ void loop() {
           // Run motors
           powerLeft  = forward + turn;
           powerRight = forward - turn;
-          powerUp    = computePID_altitude(target_alt, readTOF());
+          powerUp    = constrain(computePID_altitude(target_alt, readTOF()), -200, 200);
           runMotors(powerLeft, powerRight, powerUp);
+          // Serial.print(powerLeft);
+          // Serial.print(", ");
+          // Serial.print(powerRight);
+          // Serial.print(", ");
+          // Serial.println(powerUp);
+
+          Serial.print(target_yaw);
+          Serial.print(", ");
+          Serial.println(ypr.yaw);
      
 
 ///////////////////////////////////////////////////////////////

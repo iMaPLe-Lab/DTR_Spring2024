@@ -15,6 +15,7 @@ struct euler_t {
   float pitch;
   float roll;
 } ypr;
+double target_yaw = 0;
 
 Adafruit_BNO08x  bno08x(BNO08X_RESET);
 sh2_SensorValue_t sensorValue;
@@ -129,8 +130,10 @@ void sensorSetup() {
   setReports(reportType, reportIntervalUs);
 
   readIMU();
-  delay(1);
-  readIMU();
+  delay(500);
+  // readIMU();
+  target_yaw = readIMU();
+  Serial.println(target_yaw);
 
 
   //////////// TOF setup ////////////

@@ -3,10 +3,10 @@
 
 
 // Adafruit_MotorShield AFMStop(0x61); // Rightmost jumper closed
-Adafruit_MotorShield AFMS(0x60); 
+Adafruit_MotorShield AFMS(0x61); 
 Adafruit_DCMotor *motorRight = AFMS.getMotor(4);
 Adafruit_DCMotor *motorLeft = AFMS.getMotor(3);
-Adafruit_DCMotor *motorUp = AFMS.getMotor(2);
+Adafruit_DCMotor *motorUp = AFMS.getMotor(1);
 
 //////////// Define const ////////////
 #define CATCHSPEED 200
