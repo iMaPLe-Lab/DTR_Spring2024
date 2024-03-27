@@ -12,7 +12,7 @@ struct __attribute__((packed)) Data {
     bool y_button;
 } data;
 
-Data readControllerData(WiFiClient& client) {
+String readControllerData(WiFiClient& client) {
     static int16_t seqExpected = 0;
 
     // if data available from client read and display it
@@ -23,9 +23,9 @@ Data readControllerData(WiFiClient& client) {
         // if data is correct length read and display it
         if (length == sizeof(data)) {
             client.readBytes((char*)&data, sizeof(data));
-            // Serial.printf("seq %d left_x %d left_y %d right_x %d right_y %d l2_trigger %d r2_trigger %d r1_button %d l1_button %d x_button %d y_button %d \n", 
-            //             (short)data.seq, (short)data.left_x, (short)data.left_y, (short)data.right_x, (short)data.right_y, (short)data.l2_trigger, (short)data.r2_trigger,
-            //              (bool)data.r1_button, (bool)data.l1_button, (bool)data.x_button, (bool)data.y_button);
+            Serial.printf("seq %d left_x %d left_y %d right_x %d right_y %d l2_trigger %d r2_trigger %d r1_button %d l1_button %d x_button %d y_button %d \n", 
+                        (short)data.seq, (short)data.left_x, (short)data.left_y, (short)data.right_x, (short)data.right_y, (short)data.l2_trigger, (short)data.r2_trigger,
+                         (bool)data.r1_button, (bool)data.l1_button, (bool)data.x_button, (bool)data.y_button);
             if (data.seq != seqExpected)  // check sequence number received
                 Serial.printf("Error! seq expected %d received %d\n", seqExpected, data.seq);
             seqExpected = data.seq;  // set sequence number ready for next data
@@ -36,12 +36,5 @@ Data readControllerData(WiFiClient& client) {
         }
             
     }
-    return data;
-}
-
-void processData(Data data, int* ptrLX, int* ptrLY, int* ptrRX, int* ptrRY) {
-  *ptrLX = data.left_x;
-  *ptrLY = data.left_y;
-  *ptrRX = data.right_x;
-  *ptrRY = data.right_y;
+    return "success";
 }

@@ -58,84 +58,72 @@ int up = 0;
 // Arduino loop function. Runs in CPU 1
 void loop() {
 
-  // delay(10);
   WiFiClient client = server.available();
   if (client) {
     Serial.println("Client connected");
     while (client.connected()) {
       if (client.available()) {
-        char typeIdentifier = client.read();
-        if (typeIdentifier == 'I') {
-          String result = readInteger(client);
-          // processData(result, ptrRightJoystickX, ptrLeftJoystickY, ptrThrust, ptrBreak, ptrcatchs, ptrstable);
-          processData(result, ptrLeftJoystickY, ptrRightJoystickX, ptrThrottlebutton, ptrBrakebutton, ptrCatchs, ptrAttKill);
-          // Serial.print(leftJoystickY);
-          // Serial.print(", ");
-          // Serial.print(rightJoystickX);
-          // Serial.print(", ");
-          // Serial.print(Throttlebutton);
-          // Serial.print(", ");
-          // Serial.print(Brakebutton);
-          // Serial.print(", ");
-          // Serial.print(catchs);
-          // Serial.print(", ");
-          // Serial.println(attKill);
+        Data data = readControllerData(client); // get controller values
 
-          // Altitude control
-          if (Throttlebutton > 30){
-            target_alt += Throttlebutton/600;
-            target_alt = constrain(target_alt, 0, 4000); // UPDATE based on sensor
-          }
-          if (Brakebutton > 30){
-            target_alt -= Brakebutton/600;
-          }      
-          target_alt = constrain(target_alt, 0, 4000); // UPDATE based on sensor
+        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrRightJoystickX, ptrRightJoystickY); // map recieved controller values to pointers
+        Serial.print("\n");
+        Serial.print(leftJoystickX);
+        Serial.print(", ");
+        Serial.print(leftJoystickY);
+        Serial.print(", ");
+        Serial.print(rightJoystickX);
+        Serial.print(", ");
+        Serial.print(rightJoystickY);
+        Serial.print("\n");
 
-          // Yaw control
-          if (abs(rightJoystickX) > 30){ // actively turning, so don't hold position with IMU
-            turn = rightJoystickX/2;
-            target_yaw = readIMU();
-          }
-          else if (abs(rightJoystickX) > 1){ // just released control input, set target yaw to hold
-            target_yaw = readIMU();
-            turn = computePID_yaw(target_yaw, readIMU());
-          }
-          else { // hold target yaw with PID
-            turn = computePID_yaw(target_yaw, readIMU());
-          }
-          turn = constrain(turn, -200, 200);
+        runMotors(rightJoystickX*8, -rightJoystickX*8, leftJoystickY*8); // TODO: change this to use the ESC and run non=blocking
 
-          // Direction control
-          if (abs(leftJoystickY) > 30){
-            forward = leftJoystickY/2;
-          } else if (abs(leftJoystickY) > 1){
-            forward = 0;
-          }
-          forward = constrain(forward, -200, 200);
 
-          // Kill altitude
-          if (attKill){
-            target_alt = 0;
-          }
 
-          // Run motors
-          powerLeft  = forward + turn;
-          powerRight = forward - turn;
-          powerUp    = constrain(computePID_altitude(target_alt, readTOF()), -200, 200);
-          runMotors(powerLeft, powerRight, powerUp);
-          // Serial.print(powerLeft);
-          // Serial.print(", ");
-          // Serial.print(powerRight);
-          // Serial.print(", ");
-          // Serial.println(powerUp);
+        /////////////////////// Old close-loop control code ///////////////////////
 
-          Serial.print(target_yaw);
-          Serial.print(", ");
-          Serial.println(ypr.yaw);
-     
+        // Altitude control
+        // if (Throttlebutton > 30){
+        //   target_alt += Throttlebutton/600;
+        //   target_alt = constrain(target_alt, 0, 4000); // UPDATE based on sensor
+        // }
+        // if (Brakebutton > 30){
+        //   target_alt -= Brakebutton/600;
+        // }      
+        // target_alt = constrain(target_alt, 0, 4000); // UPDATE based on sensor
 
-///////////////////////////////////////////////////////////////
-        }
+        // // Yaw control
+        // if (abs(rightJoystickX) > 30){ // actively turning, so don't hold position with IMU
+        //   turn = rightJoystickX/2;
+        //   target_yaw = readIMU();
+        // }
+        // else if (abs(rightJoystickX) > 1){ // just released control input, set target yaw to hold
+        //   target_yaw = readIMU();
+        //   turn = computePID_yaw(target_yaw, readIMU());
+        // }
+        // else { // hold target yaw with PID
+        //   turn = computePID_yaw(target_yaw, readIMU());
+        // }
+        // turn = constrain(turn, -200, 200);
+
+        // // Direction control
+        // if (abs(leftJoystickY) > 30){
+        //   forward = leftJoystickY/2;
+        // } else if (abs(leftJoystickY) > 1){
+        //   forward = 0;
+        // }
+        // forward = constrain(forward, -200, 200);
+
+        // // Kill altitude
+        // if (attKill){
+        //   target_alt = 0;
+        // }
+
+        // // Run motors
+        // powerLeft  = forward + turn;
+        // powerRight = forward - turn;
+        // powerUp    = constrain(computePID_altitude(target_alt, readTOF()), -200, 200);
+        // runMotors(powerLeft, powerRight, powerUp);
       }
     }
     client.stop();

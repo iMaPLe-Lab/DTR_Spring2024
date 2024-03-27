@@ -14,7 +14,7 @@ void setup() {
 
   //////////// Motor setup ////////////
   motorSetup();
-  AFMS.begin();
+  // AFMS.begin();
 
 
   //////////// Wifi setup ////////////
