@@ -6,15 +6,15 @@ double previous_error_yaw = 0;
 double previous_error_altitude = 0;
 
 // PID constants
-const double kp = 1.5;
+const double kp = 2.5;
 const double ki = 0;
-const double kd = 0;
+const double kd = 15;
 
 const double kp_alt = 0.5;
 const double ki_alt = 0;
 const double kd_alt = 0;
 
-const double kp_f = 3.8;
+const double kp_f = 1;
 const double ki_f = 0;
 const double kd_f = 0;
 
