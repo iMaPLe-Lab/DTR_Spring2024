@@ -1,3 +1,6 @@
+#include <TFMPI2C.h>  // TFMini-Plus I2C Library v1.7.3
+TFMPI2C tfmP;         // Create a TFMini-Plus I2C object
+
 //////////// IMU Constants ////////////
 #define BNO08X_RESET -1
 #define SDA0_Pin 41   // select ESP32  I2C pins
@@ -12,6 +15,10 @@ double target_yaw = 0;
 
 Adafruit_BNO08x  bno08x(BNO08X_RESET);
 sh2_SensorValue_t sensorValue;
+
+int16_t tfDist = 0;       // Distance to object in centimeters
+int16_t tfFlux = 0;       // Signal strength or quality of return signal
+int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
 
 #ifdef FAST_MODE
   // Top frequency is reported to be 1000Hz (but freq is somewhat variable)
@@ -81,6 +88,27 @@ void readIMU(){
 //   return ypr;
 }
 
+void readTOF(){
+  tfmP.getData(tfDist, tfFlux, tfTemp); // Get a frame of data
+    if( tfmP.status == TFMP_READY)         // If no error...
+    {
+        Serial.printf( "Dist:%04icm ", tfDist);   // display distance,
+        Serial.printf( "Flux:%05i ", tfFlux);     // display signal strength/quality,
+        Serial.printf( "Temp:%2i%s", tfTemp, "°C" );   // display temperature,
+        Serial.printf( "\n");                     // end-of-line.
+    }
+    else
+    {
+        tfmP.printFrame();                 // Display error and data frame
+        if( tfmP.status == TFMP_I2CWRITE)  // If I2C error...
+        {
+            // tfmP.recoverI2CBus();          // recover hung bus.
+            Serial.println("Couldn't connect to TOF");
+        }
+    }
+  
+}
+
 void sensorSetup() {
 
   //////////// IMU setup ////////////
@@ -96,11 +124,31 @@ void sensorSetup() {
   setReports(reportType, reportIntervalUs);
 
   readIMU();
-  delay(500);
+  delay(250);
 
   readIMU();
   target_yaw = ypr.yaw;
   Serial.print("Initial target yaw: ");
   Serial.println(target_yaw);
+
+
+
+  Serial.printf( "System reset: ");
+  if( tfmP.sendCommand( SOFT_RESET, 0))
+  {
+      printf( "passed.\r\n");
+  }
+  else tfmP.printReply();
+
+  Serial.printf( "Enable Output: ");
+  if( tfmP.sendCommand( ENABLE_OUTPUT, 0))
+  {
+      printf( "passed.\r\n");
+  }
+  else tfmP.printReply();
+
+  delay(250);
+
+  readTOF();
 
 }

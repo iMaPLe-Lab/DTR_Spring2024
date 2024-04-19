@@ -23,9 +23,9 @@ void setReports(sh2_SensorId_t reportType, long report_interval);
 void sensorSetup();
 
 // Initialize data variables
-int16_t tfDist = 0;       // Distance to object in centimeters
-int16_t tfFlux = 0;       // Signal strength or quality of return signal
-int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
+// int16_t tfDist = 0;       // Distance to object in centimeters
+// int16_t tfFlux = 0;       // Signal strength or quality of return signal
+// int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
 
 //////// Define global variables ////////////
 int leftJoystickX   = 0;  // (-511 - 512) left X axis
@@ -175,7 +175,10 @@ void loop() {
         // Serial.print("\n");
         
         /******************* ALITITUDE CONTROL *******************/
-        *ptr_speedEscAltitude = leftJoystickY*6; // up and down 
+        *ptr_speedEscAltitude = leftJoystickY*6; // up and down
+
+        readTOF();
+
         
 
         /******************* DIRECTION/YAW CONTROL *******************/
