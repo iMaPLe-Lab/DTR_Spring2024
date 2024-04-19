@@ -1,6 +1,3 @@
-//Rename this to main.cpp or <something>.ino if you're in Arduino
-//Starts the ESC, sets it to be bidirectionnal, then beeps, then makes it go one way then the other over and over at low speeds
-
 #include "WiFi.h"
 #include "Arduino.h"
 #include "Wire.h"
@@ -12,8 +9,7 @@
 #include "DShotESC.h"
 #include <ESP32Servo.h>
 
-Servo myservo;  // create servo object to control a servo
-// 16 servo objects can be created on the ESP32
+Servo myservo;
 int servoPin = 9;
 #define PEAKSPEED 500
 #define SINE_DURATION 10000.f //duration of the full cycle, in millis
@@ -22,19 +18,14 @@ int pos = 0;
 void setReports(sh2_SensorId_t reportType, long report_interval);
 void sensorSetup();
 
-// Initialize data variables
-// int16_t tfDist = 0;       // Distance to object in centimeters
-// int16_t tfFlux = 0;       // Signal strength or quality of return signal
-// int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
-
 //////// Define global variables ////////////
-int leftJoystickX   = 0;  // (-511 - 512) left X axis
-int leftJoystickY   = 0;  // (-511 - 512) left Y axis
-int leftThrottle    = 0; // for altitude increase (0-1023)
-int rightThrottle   = 0;
-int Brakebutton     = 0; // for altitude decrease (0-1023)
-int rightJoystickX  = 0; // (-511 - 512) right X axis
-int rightJoystickY  = 0; // (-511 - 512) right Y axis
+int leftJoystickX   = 0; // (-100 - 100) left X axis
+int leftJoystickY   = 0; // (-100 - 100) left Y axis
+int leftThrottle    = 0; // backward
+int rightThrottle   = 0; // forward
+int Brakebutton     = 0;
+int rightJoystickX  = 0; // (-100 - 100) right X axis
+int rightJoystickY  = 0; // (-100 - 100) right Y axis
 int catchs          = 0;
 int attKill         = 0;
 int R2              = 0;
@@ -59,7 +50,7 @@ unsigned long lastUpdate = 0; // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
 
 
-double target_alt = 100; // mm
+double target_alt = 150; // cm
 int powerLeft = 0;
 int powerRight = 0;
 int powerUp = 0;
@@ -175,30 +166,42 @@ void loop() {
         // Serial.print("\n");
         
         /******************* ALITITUDE CONTROL *******************/
-        *ptr_speedEscAltitude = leftJoystickY*6; // up and down
-
         readTOF();
+        Serial.printf( "Alt: %04icm ", tfDist);
+        // Serial.printf( "\n");
+        Serial.print(", Target Alt: ");
+        Serial.println(target_alt);
+        target_alt = target_alt + leftJoystickY*0.1;
+        if (target_alt < 0){
+          target_alt = 0;
+        }
+
+        Serial.print("Altitude PID value: ");
+        double alt_pid = constrain(computePID_altitude(target_alt, tfDist), -500, 500);
+        Serial.println(alt_pid);
+
+        *ptr_speedEscAltitude = alt_pid;//leftJoystickY*6; // up and down
 
         
 
         /******************* DIRECTION/YAW CONTROL *******************/
-        readIMU();
-        Serial.print("Yaw: ");
-        Serial.print(ypr.yaw);
-        Serial.print(", Target Yaw: ");
-        Serial.println(target_yaw);
+        // readIMU();
+        // Serial.print("Yaw: ");
+        // Serial.print(ypr.yaw);
+        // Serial.print(", Target Yaw: ");
+        // Serial.println(target_yaw);
 
         int leftMotorSpeed = map(max(0, -rightJoystickY), 0, 100, 0, 100);
         int rightMotorSpeed = map(max(0, rightJoystickY), 0, 100, 0, 100);
 
-        if (is_turning && abs(rightJoystickY) < 5) { // Just stopped turning
-          is_turning = false;
-          target_yaw = ypr.yaw; // set yaw position to hold
-        }
-        Serial.print("Yaw PID value: ");
-        double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -350, 350);
-        double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -200, 200);
-        Serial.println(yaw_pid);
+        // if (is_turning && abs(rightJoystickY) < 5) { // Just stopped turning
+        //   is_turning = false;
+        //   target_yaw = ypr.yaw; // set yaw position to hold
+        // }
+        // Serial.print("Yaw PID value: ");
+        // double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -350, 350);
+        // double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -200, 200);
+        // Serial.println(yaw_pid);
 
         if(rightJoystickY!=0){ // if turning
           is_turning = true;

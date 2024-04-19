@@ -90,23 +90,22 @@ void readIMU(){
 
 void readTOF(){
   tfmP.getData(tfDist, tfFlux, tfTemp); // Get a frame of data
-    if( tfmP.status == TFMP_READY)         // If no error...
-    {
-        Serial.printf( "Dist:%04icm ", tfDist);   // display distance,
-        Serial.printf( "Flux:%05i ", tfFlux);     // display signal strength/quality,
-        Serial.printf( "Temp:%2i%s", tfTemp, "°C" );   // display temperature,
-        Serial.printf( "\n");                     // end-of-line.
-    }
-    else
-    {
-        tfmP.printFrame();                 // Display error and data frame
-        if( tfmP.status == TFMP_I2CWRITE)  // If I2C error...
-        {
-            // tfmP.recoverI2CBus();          // recover hung bus.
-            Serial.println("Couldn't connect to TOF");
-        }
-    }
-  
+    // if( tfmP.status == TFMP_READY)         // If no error...
+    // {
+    //     Serial.printf( "Dist:%04icm ", tfDist);   // display distance,
+    //     Serial.printf( "Flux:%05i ", tfFlux);     // display signal strength/quality,
+    //     Serial.printf( "Temp:%2i%s", tfTemp, "°C" );   // display temperature,
+    //     Serial.printf( "\n");                     // end-of-line.
+    // }
+    // else
+    // {
+    //     tfmP.printFrame();                 // Display error and data frame
+    //     if( tfmP.status == TFMP_I2CWRITE)  // If I2C error...
+    //     {
+    //         // tfmP.recoverI2CBus();          // recover hung bus.
+    //         Serial.println("Couldn't connect to TOF");
+    //     }
+    // }
 }
 
 void sensorSetup() {
@@ -131,8 +130,7 @@ void sensorSetup() {
   Serial.print("Initial target yaw: ");
   Serial.println(target_yaw);
 
-
-
+  //////////// TOF setup ////////////
   Serial.printf( "System reset: ");
   if( tfmP.sendCommand( SOFT_RESET, 0))
   {
