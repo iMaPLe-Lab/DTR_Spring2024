@@ -129,6 +129,8 @@ void setup() {
   motorSetup();
   sensorSetup();
 
+  myservo.attach(servoPin, 1000, 2000); // attaches the servo on pin 18 to the servo object
+
   //////////// Wifi setup ////////////
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -225,16 +227,18 @@ void loop() {
             }
           }
 
-        } else if(R2 == 0 && rightJoystickX != 0){ // forward
-          *ptr_speedEsc1 = constrain(rightJoystickX + yaw_pid_fw, -700, 700);
-          *ptr_speedEsc2 = -constrain(rightJoystickX + yaw_pid_fw, -700, 700);
-        } else if(R2 != 0){ // backward
-          *ptr_speedEsc1 = constrain(-R2*7*7 + yaw_pid_fw, -700, 700);
-          *ptr_speedEsc2 = constrain(R2*7*7 + yaw_pid_fw,-700, 700);
-        } else { // hold yaw angle
-          *ptr_speedEsc1 = -yaw_pid;
-          *ptr_speedEsc2 = -yaw_pid;
-        }
+        } else if(R2 == 0 ){ // backward
+          *ptr_speedEsc1 =  constrain(rightJoystickX*7, -700, 700);
+          *ptr_speedEsc2 = -constrain(rightJoystickX*7, -700, 700);
+        } else if(R2 != 0){ // forward
+          
+          *ptr_speedEsc1 = -constrain(R2*7, -700, 700);
+          *ptr_speedEsc2 =  constrain(R2*7,-700, 700);
+        } 
+        // else if(R2==0 && rightJoystickX == 0 ){ // hold yaw angle
+        //   // *ptr_speedEsc1 = -yaw_pid;
+        //   // *ptr_speedEsc2 = -yaw_pid;
+        // }
 
 
         /******************* CAPTURE CONTROL *******************/
@@ -243,6 +247,8 @@ void loop() {
         }
               
         last_toggle = X;
+        Serial.print("X value: ");
+        Serial.println(X);
 
         unsigned long currentMillis = millis(); // Current time in milliseconds
         unsigned long lastCheckTime = 0; // Timestamp of the last check
