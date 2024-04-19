@@ -61,12 +61,12 @@ int setleftandrightSpeeds(int16_t input) {
     return map(normalizedValue, -100, 100, -100, 100);
 }
 
-void processData(Data data, int* ptrLX, int* ptrLY, int* ptrRX, int* ptrRY,int* ptrR2, bool* ptrX) {
+void processData(Data data, int* ptrLX, int* ptrLY, int* ptrLeftThrottle, int* ptrRY,int* ptrRightThrottle, bool* ptrXButton) {
   *ptrLX = data.left_x;
   *ptrLY = data.left_y;
-  *ptrRX = data.l2_trigger;//mapValue(data.right_x); //L2 zero -100 , full 100 Trust 
-  *ptrRY = setleftandrightSpeeds(-data.right_x);//setleftandrightSpeeds(data.right_y); //left right left 100 right -99 /
-  *ptrR2 = data.r2_trigger;
-  *ptrX = data.x_button;
+  *ptrLeftThrottle = data.l2_trigger;
+  *ptrRY = setleftandrightSpeeds(-data.right_x);
+  *ptrRightThrottle = data.r2_trigger;
+  *ptrXButton = data.x_button;
 }
 

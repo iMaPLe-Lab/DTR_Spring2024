@@ -30,14 +30,15 @@ int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
 //////// Define global variables ////////////
 int leftJoystickX   = 0;  // (-511 - 512) left X axis
 int leftJoystickY   = 0;  // (-511 - 512) left Y axis
-int Throttlebutton  = 0; // for altitude increase (0-1023)
+int leftThrottle    = 0; // for altitude increase (0-1023)
+int rightThrottle   = 0;
 int Brakebutton     = 0; // for altitude decrease (0-1023)
 int rightJoystickX  = 0; // (-511 - 512) right X axis
 int rightJoystickY  = 0; // (-511 - 512) right Y axis
 int catchs          = 0;
 int attKill         = 0;
 int R2              = 0;
-bool X = 0;
+bool XButton = 0;
 bool toggle = 0;
 bool last_toggle = 0;
 bool catch_flag = 0;
@@ -45,14 +46,15 @@ bool catch_flag = 0;
 int* ptrR2 = &R2;
 int* ptrLeftJoystickX   = &leftJoystickX;
 int* ptrLeftJoystickY   = &leftJoystickY;
-int* ptrThrottlebutton  = &Throttlebutton;
+int* ptrLeftThrottle    = &leftThrottle;
+int* ptrRightThrottle   = &rightThrottle;
 int* ptrBrakebutton     = &Brakebutton;
 int* ptrRightJoystickX  = &rightJoystickX;
 int* ptrRightJoystickY  = &rightJoystickY;
 int* ptrCatchs          = &catchs;
 int* ptrAttKill         = &attKill;
 
-bool* ptrX = &X;
+bool* ptrXButton = &XButton;
 unsigned long lastUpdate = 0; // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
 
@@ -73,18 +75,18 @@ float roll;
 float pitch;
 float yaw;
 
-static int speedEsc0 = 0, speedEsc1 = 0, speedEsc2 = 0;
-int* ptr_speedEsc0 = &speedEsc0;
-int* ptr_speedEsc1 = &speedEsc1;
-int* ptr_speedEsc2 = &speedEsc2;
+static int speedEscAltitude = 0, speedEscLeft = 0, speedEscRight = 0;
+int* ptr_speedEscAltitude = &speedEscAltitude;
+int* ptr_speedEscLeft = &speedEscLeft;
+int* ptr_speedEscRight = &speedEscRight;
 
 bool is_turning = false;
 
 void escUpdateTask(void * parameter) {
    for (;;) {
-    if(ptr_speedEsc0 != nullptr) esc0.sendThrottle3D(*ptr_speedEsc0);
-    if(ptr_speedEsc1 != nullptr) esc1.sendThrottle3D(*ptr_speedEsc1);
-    if(ptr_speedEsc2 != nullptr) esc2.sendThrottle3D(*ptr_speedEsc2);
+    if(ptr_speedEscAltitude != nullptr) esc0.sendThrottle3D(*ptr_speedEscAltitude);
+    if(ptr_speedEscLeft != nullptr) esc1.sendThrottle3D(*ptr_speedEscLeft);
+    if(ptr_speedEscRight != nullptr) esc2.sendThrottle3D(*ptr_speedEscRight);
     vTaskDelay(pdMS_TO_TICKS(100)); // Adjusts for 10Hz update rate
   }
 }
@@ -159,7 +161,7 @@ void loop() {
       if (client.available()) {
         Data data = readControllerData(client); // get controller values
 
-        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrRightJoystickX, ptrRightJoystickY, ptrR2, ptrX); // map recieved controller values to pointers
+        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton); // map recieved controller values to pointers
         // Serial.print("\n Up and down: ");
         // Serial.print(leftJoystickY);
         // Serial.print(", ");
@@ -173,7 +175,7 @@ void loop() {
         // Serial.print("\n");
         
         /******************* ALITITUDE CONTROL *******************/
-        *ptr_speedEsc0 =leftJoystickY*6; // up and down 
+        *ptr_speedEscAltitude = leftJoystickY*6; // up and down 
         
 
         /******************* DIRECTION/YAW CONTROL *******************/
@@ -182,20 +184,9 @@ void loop() {
         Serial.print(ypr.yaw);
         Serial.print(", Target Yaw: ");
         Serial.println(target_yaw);
-        // Serial.print(", Roll: ");
-        // Serial.print(ypr.roll);
-        // Serial.print(", Pitch: ");
-        // Serial.println(ypr.pitch);
 
         int leftMotorSpeed = map(max(0, -rightJoystickY), 0, 100, 0, 100);
         int rightMotorSpeed = map(max(0, rightJoystickY), 0, 100, 0, 100);
-
-        // Serial.print("Left:");
-        // Serial.print(leftMotorSpeed);
-        // Serial.print("R2:");
-        // // Serial.print(rightMotorSpeed);
-        // // Serial.print("\n");
-        //  Serial.println(R2);
 
         if (is_turning && abs(rightJoystickY) < 5) { // Just stopped turning
           is_turning = false;
@@ -209,31 +200,31 @@ void loop() {
         if(rightJoystickY!=0){ // if turning
           is_turning = true;
 
-          if(rightJoystickX>0){ // turn and move forward
+          if(leftThrottle>0){ // turn and move forward
             if(rightJoystickY>0){
-              *ptr_speedEsc2 = rightJoystickX*(1.0-float(rightMotorSpeed)/100.0);
-              *ptr_speedEsc1 = -rightJoystickX;
+              *ptr_speedEscRight = leftThrottle*(1.0-float(rightMotorSpeed)/100.0);
+              *ptr_speedEscLeft = -leftThrottle;
             } else if(rightJoystickY<0){
-              *ptr_speedEsc2 = rightJoystickX;
-              *ptr_speedEsc1 = -rightJoystickX*(1.0-float(leftMotorSpeed)/100.0);
+              *ptr_speedEscRight = leftThrottle;
+              *ptr_speedEscLeft = -leftThrottle*(1.0-float(leftMotorSpeed)/100.0);
             }
-          } else if(rightJoystickX==0){ // turn in place
+          } else if(leftThrottle==0){ // turn in place
             if(rightJoystickY<0){
-              *ptr_speedEsc2 = 500*(float(leftMotorSpeed)/100.0);
-              *ptr_speedEsc1 = 500*(float(leftMotorSpeed)/100.0);
+              *ptr_speedEscRight = 500*(float(leftMotorSpeed)/100.0);
+              *ptr_speedEscLeft = 500*(float(leftMotorSpeed)/100.0);
             } else if(rightJoystickY>0){
-              *ptr_speedEsc2 = -500*(float(rightMotorSpeed)/100.0);
-              *ptr_speedEsc1 = -500*(float(rightMotorSpeed)/100.0);
+              *ptr_speedEscRight = -500*(float(rightMotorSpeed)/100.0);
+              *ptr_speedEscLeft = -500*(float(rightMotorSpeed)/100.0);
             }
           }
 
-        } else if(R2 == 0 ){ // backward
-          *ptr_speedEsc1 =  constrain(rightJoystickX*7, -700, 700);
-          *ptr_speedEsc2 = -constrain(rightJoystickX*7, -700, 700);
-        } else if(R2 != 0){ // forward
+        } else if(rightThrottle == 0 ){ // backward?
+          *ptr_speedEscLeft =  constrain(leftThrottle*7, -700, 700);
+          *ptr_speedEscRight = -constrain(leftThrottle*7, -700, 700);
+        } else if(rightThrottle != 0){ // forward?
           
-          *ptr_speedEsc1 = -constrain(R2*7, -700, 700);
-          *ptr_speedEsc2 =  constrain(R2*7,-700, 700);
+          *ptr_speedEscLeft = -constrain(rightThrottle*7, -700, 700);
+          *ptr_speedEscRight =  constrain(rightThrottle*7,-700, 700);
         } 
         // else if(R2==0 && rightJoystickX == 0 ){ // hold yaw angle
         //   // *ptr_speedEsc1 = -yaw_pid;
@@ -242,13 +233,11 @@ void loop() {
 
 
         /******************* CAPTURE CONTROL *******************/
-        if(last_toggle == 1 && X ==0 ){
+        if(last_toggle == 1 && XButton ==0 ){
           catch_flag = !catch_flag;
         }
               
-        last_toggle = X;
-        Serial.print("X value: ");
-        Serial.println(X);
+        last_toggle = XButton;
 
         unsigned long currentMillis = millis(); // Current time in milliseconds
         unsigned long lastCheckTime = 0; // Timestamp of the last check
