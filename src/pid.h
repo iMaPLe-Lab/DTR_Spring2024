@@ -48,7 +48,7 @@ double computePID_yaw_fw(double goal_yaw, double current_yaw) {
 
 double computePID_altitude(double goal_altitude, double current_altitude) {
 
-  double error_altitude = goal_altitude - current_altitude;
+  double error_altitude = goal_altitude - current_altitude; //cm 
   integral_altitude += error_altitude;
 
   double derivative_altitude = error_altitude - previous_error_altitude;

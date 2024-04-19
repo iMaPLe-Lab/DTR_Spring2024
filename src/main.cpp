@@ -72,6 +72,7 @@ int* ptr_speedEscLeft = &speedEscLeft;
 int* ptr_speedEscRight = &speedEscRight;
 
 bool is_turning = false;
+bool is_manual_alt = false;
 
 void escUpdateTask(void * parameter) {
    for (;;) {
@@ -168,21 +169,29 @@ void loop() {
         /******************* ALITITUDE CONTROL *******************/
         readTOF();
         Serial.printf( "Alt: %04icm ", tfDist);
-        // Serial.printf( "\n");
         Serial.print(", Target Alt: ");
         Serial.println(target_alt);
-        target_alt = target_alt + leftJoystickY*0.1;
-        if (target_alt < 0){
-          target_alt = 0;
-        }
+        // target_alt = target_alt + leftJoystickY*0.1;
+        // if (target_alt < 0){
+        //   target_alt = 0;
+        // }
 
-        Serial.print("Altitude PID value: ");
         double alt_pid = constrain(computePID_altitude(target_alt, tfDist), -500, 500);
+        Serial.print("Altitude PID value: ");
         Serial.println(alt_pid);
 
-        *ptr_speedEscAltitude = alt_pid;//leftJoystickY*6; // up and down
+        if (abs(leftJoystickY) > 0) {
+          *ptr_speedEscAltitude = leftJoystickY*6; // manual up and down
+          is_manual_alt = true;
+        } else {
+          *ptr_speedEscAltitude = alt_pid; // hold altitude with PID
+        }
 
-        
+        if (is_manual_alt && abs(leftJoystickY) < 2) { // Just stopped changing altitude
+          is_manual_alt = false;
+          target_alt = tfDist; // set alt position to hold
+        }
+
 
         /******************* DIRECTION/YAW CONTROL *******************/
         // readIMU();
