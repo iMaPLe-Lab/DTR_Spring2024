@@ -10,7 +10,7 @@ const double kp = 2.5;
 const double ki = 0;
 const double kd = 15;
 
-const double kp_alt = 6;
+const double kp_alt = 10;
 const double ki_alt = 0;
 const double kd_alt = 0;
 

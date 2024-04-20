@@ -129,10 +129,10 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.println("Connecting to WiFi...");
+    Serial1.println("Connecting to WiFi...");
   }
-  Serial.println("Connected to WiFi");
-  Serial.println(WiFi.localIP());
+  Serial1.println("Connected to WiFi");
+  Serial1.println(WiFi.localIP());
   // Start the server
   server.begin();
 
@@ -168,17 +168,17 @@ void loop() {
         
         /******************* ALITITUDE CONTROL *******************/
         readTOF();
-        Serial.printf( "Alt: %04icm ", tfDist);
-        Serial.print(", Target Alt: ");
-        Serial.println(target_alt);
+        Serial1.printf( "Alt: %04icm ", tfDist);
+        Serial1.print(", Target Alt: ");
+        Serial1.println(target_alt);
         // target_alt = target_alt + leftJoystickY*0.1;
         // if (target_alt < 0){
         //   target_alt = 0;
         // }
 
-        double alt_pid = constrain(computePID_altitude(target_alt, tfDist), -500, 500);
-        Serial.print("Altitude PID value: ");
-        Serial.println(alt_pid);
+        double alt_pid = 100+constrain(computePID_altitude(target_alt, tfDist), 0, 500);
+        Serial1.print("Altitude PID value: ");
+        Serial1.println(alt_pid);
 
         if (abs(leftJoystickY) > 0) {
           *ptr_speedEscAltitude = leftJoystickY*6; // manual up and down
@@ -269,6 +269,6 @@ void loop() {
       }
     }
     client.stop();
-    Serial.println("Client disconnected");
+    Serial1.println("Client disconnected");
   }
 }
