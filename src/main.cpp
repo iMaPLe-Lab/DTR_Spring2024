@@ -30,6 +30,7 @@ int catchs          = 0;
 int attKill         = 0;
 int R2              = 0;
 bool XButton = 0;
+bool YButton = 0;
 bool toggle = 0;
 bool last_toggle = 0;
 bool catch_flag = 0;
@@ -45,6 +46,7 @@ int* ptrRightJoystickY  = &rightJoystickY;
 int* ptrCatchs          = &catchs;
 int* ptrAttKill         = &attKill;
 
+bool* ptrYButton = &YButton;
 bool* ptrXButton = &XButton;
 unsigned long lastUpdate = 0; // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
@@ -66,10 +68,10 @@ float roll;
 float pitch;
 float yaw;
 
-static int speedEscAltitude = 0, speedEscLeft = 0, speedEscRight = 0;
+static int speedEscAltitude = 0, speedEscRight = 0, speedEscLeft = 0;
 int* ptr_speedEscAltitude = &speedEscAltitude;
-int* ptr_speedEscLeft = &speedEscLeft;
 int* ptr_speedEscRight = &speedEscRight;
+int* ptr_speedEscLeft = &speedEscLeft;
 
 bool is_turning = false;
 bool is_manual_alt = false;
@@ -77,8 +79,8 @@ bool is_manual_alt = false;
 void escUpdateTask(void * parameter) {
    for (;;) {
     if(ptr_speedEscAltitude != nullptr) esc0.sendThrottle3D(*ptr_speedEscAltitude);
-    if(ptr_speedEscLeft != nullptr) esc1.sendThrottle3D(*ptr_speedEscLeft);
-    if(ptr_speedEscRight != nullptr) esc2.sendThrottle3D(*ptr_speedEscRight);
+    if(ptr_speedEscRight != nullptr) esc1.sendThrottle3D(*ptr_speedEscRight);
+    if(ptr_speedEscLeft != nullptr) esc2.sendThrottle3D(*ptr_speedEscLeft);
     vTaskDelay(pdMS_TO_TICKS(100)); // Adjusts for 10Hz update rate
   }
 }
@@ -150,7 +152,6 @@ void setup() {
 
 
 void loop() {
-
   WiFiClient client = server.available();
   if (client) {
     Serial.println("Client connected");
@@ -158,18 +159,8 @@ void loop() {
       if (client.available()) {
         Data data = readControllerData(client); // get controller values
 
-        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton); // map recieved controller values to pointers
-        // Serial.print("\n Up and down: ");
-        // Serial.print(leftJoystickY);
-        // Serial.print(", ");
-        // Serial.print(leftJoystickX);
-        // Serial.print(", Thrust: ");
-        // Serial.print(rightJoystickX);
-        // Serial.print(", Left&Right: ");
-        // Serial.print(rightJoystickY);
-        // Serial.print("R2:");
-        // Serial.print(R2);
-        // Serial.print("\n");
+        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton, ptrYButton); // map recieved controller values to pointers
+
         
         /******************* ALITITUDE CONTROL *******************/
         readTOF();
@@ -181,7 +172,7 @@ void loop() {
         // Serial.print(", Target Alt: ");
         // Serial.println(target_alt);
 
-        double alt_pid = 200+constrain(computePID_altitude(target_alt, tfDist), 0, 500);
+        double alt_pid = 120+constrain(computePID_altitude(target_alt, tfDist), 0, 500);
         // Serial1.print("Altitude PID value: ");
         // Serial1.println(alt_pid);
 
@@ -203,10 +194,10 @@ void loop() {
 
         /******************* DIRECTION/YAW CONTROL *******************/
         readIMU();
-        Serial1.print("Yaw: ");
-        Serial1.print(ypr.yaw);
-        Serial1.print(", Target Yaw: ");
-        Serial1.println(target_yaw);
+        // Serial1.print("Yaw error: ");
+        // Serial1.print(angle_difference(ypr. yaw, target_yaw));
+        // Serial1.print(", Target Yaw: ");
+        // Serial1.print(target_yaw);
 
         int leftMotorSpeed = map(max(0, -rightJoystickY), 0, 100, 0, 100);
         int rightMotorSpeed = map(max(0, rightJoystickY), 0, 100, 0, 100);
@@ -216,55 +207,53 @@ void loop() {
           target_yaw = ypr.yaw; // set yaw position to hold
         }
         
-        double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -350, 350);
-        double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -300, 300);
+        double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -550, 550);
+        double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -550, 550);
 
-        Serial1.print("Yaw PID: ");
-        Serial1.print(yaw_pid);
-        Serial1.print(", Yaw PID FWD: ");
-        Serial1.println(yaw_pid_fw);
+        // Serial1.print(", Yaw PID: ");
+        // Serial1.print(yaw_pid);
+        // Serial1.print(", Yaw PID FWD: ");
+        // Serial1.println(yaw_pid_fw);
 
 
         if(rightJoystickY!=0){ // if turning
           is_turning = true;
 
-          if(leftThrottle>0){ // turn and move forward
-            if(rightJoystickY>0){
-              *ptr_speedEscRight = leftThrottle*(1.0-float(rightMotorSpeed)/100.0);
-              *ptr_speedEscLeft = -leftThrottle;
-            } else if(rightJoystickY<0){
-              *ptr_speedEscRight = leftThrottle;
-              *ptr_speedEscLeft = -leftThrottle*(1.0-float(leftMotorSpeed)/100.0);
+          if(rightThrottle>0){ // turn and move forward
+            if(rightJoystickY>0){ // turn right
+              *ptr_speedEscLeft = -rightThrottle*6*(1.0-float(abs(rightJoystickY))/100.0);
+              *ptr_speedEscRight  = -rightThrottle*6;
+            } else if(rightJoystickY<0){ // turn left
+              *ptr_speedEscLeft = -rightThrottle*6;
+              *ptr_speedEscRight  = -rightThrottle*6*(1.0-float(abs(rightJoystickY))/100.0);
             }
-          } else if(leftThrottle==0){ // turn in place
-            if(rightJoystickY<0){
-              *ptr_speedEscRight = 500*(float(leftMotorSpeed)/100.0);
-              *ptr_speedEscLeft = 500*(float(leftMotorSpeed)/100.0);
-            } else if(rightJoystickY>0){
-              *ptr_speedEscRight = -500*(float(rightMotorSpeed)/100.0);
-              *ptr_speedEscLeft = -500*(float(rightMotorSpeed)/100.0);
+          } else if(rightThrottle==0){ // turn in place
+            if(rightJoystickY<0){ // right
+              *ptr_speedEscLeft = -500*(float(leftMotorSpeed)/100.0);
+              *ptr_speedEscRight  =  500*(float(leftMotorSpeed)/100.0);
+            } else if(rightJoystickY>0){ // left
+              *ptr_speedEscLeft =  500*(float(rightMotorSpeed)/100.0);
+              *ptr_speedEscRight  = -500*(float(rightMotorSpeed)/100.0);
             }
           }
 
-        } else if(rightThrottle == 0 ){ // backward?
-          *ptr_speedEscLeft =  constrain(leftThrottle*7+yaw_pid_fw, -700, 700);
-          *ptr_speedEscRight = -constrain(leftThrottle*7+yaw_pid_fw, -700, 700);
-        } else if(rightThrottle != 0){ // forward?
-          
-          *ptr_speedEscLeft = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700);
-          *ptr_speedEscRight =  constrain(rightThrottle*7+yaw_pid_fw,-700, 700);
+        } else if(rightThrottle != 0 && leftThrottle == 0){ // forward
+       
+          *ptr_speedEscRight  = -constrain(rightThrottle*7, -700, 700); //+yaw_pid_fw
+          *ptr_speedEscLeft = -constrain(rightThrottle*7, -700, 700); //-+yaw_pid_fw
+          // *ptr_speedEscLeft  = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //+yaw_pid_fw
+          // *ptr_speedEscRight = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //-+yaw_pid_fw  
+        } else if(rightThrottle == 0 && leftThrottle !=0 ){ // backward,, 
+          *ptr_speedEscRight  = constrain(leftThrottle*7, -700, 700); //- +yaw_pid_fw
+          *ptr_speedEscLeft = constrain(leftThrottle*7,-700, 700);//+yaw_pid_fw
+          // *ptr_speedEscLeft  = constrain(leftThrottle*7+yaw_pid_fw, -700, 700); //- +yaw_pid_fw
+          // *ptr_speedEscRight = constrain(leftThrottle*7+yaw_pid_fw,-700, 700);//+yaw_pid_fw
         } 
-        else if(R2==0 && rightJoystickX == 0 ){ // hold yaw angle
-          *ptr_speedEscLeft = -yaw_pid;
-          *ptr_speedEscRight = -yaw_pid;
+        else if(rightThrottle==  0 && leftThrottle==0 && abs(leftJoystickY) > 0){ // hold yaw angle
+          Serial1.print("Hold in place");
+          *ptr_speedEscRight  = -yaw_pid;
+          *ptr_speedEscLeft = yaw_pid;
         }
-
-        Serial1.print("Altitude Power: ");
-        Serial1.print(speedEscAltitude);
-        Serial1.print(", Left Power: ");
-        Serial1.print(speedEscLeft);
-        Serial1.print(", Right Power: ");
-        Serial1.println(speedEscRight);
 
 
         /******************* CAPTURE CONTROL *******************/
@@ -284,6 +273,39 @@ void loop() {
         } else { // If x is false, keep or move servo to 0 degrees
           myservo.write(0);
         }
+
+        // Serial1.println(YButton);
+        
+        // /******************* Update CONTROL *******************/
+        // if(last_toggle == 1 && YButton ==0 ){
+          
+        //   catch_flag = !catch_flag;
+        // }
+              
+        // last_toggle = YButton;
+
+        // // unsigned long currentMillis = millis(); // Current time in milliseconds
+        // // unsigned long lastCheckTime = 0; // Timestamp of the last check
+        // if (catch_flag) { // If x is true, move servo to 90 degrees
+        //  Serial1.println("Ready to update data");
+        //   if (Serial1.available()) {
+          
+        //   String serialdata = Serial1.readStringUntil(';'); // Read data until semicolon
+        //   Serial.println(serialdata); // Debugging: print the data received
+        //   updatePID(serialdata); // Function to parse data and update PID values
+        //   // delay(200);
+        // }
+        //   toggle = false; // Reset x back to false after acting on it
+        // } 
+
+        Serial1.print("Altitude Power: ");
+        Serial1.print(speedEscAltitude);
+        Serial1.print(", Left Power: ");
+        Serial1.print(speedEscLeft);
+        Serial1.print(", Right Power: ");
+        Serial1.println(speedEscRight);
+
+       
 
       
       }

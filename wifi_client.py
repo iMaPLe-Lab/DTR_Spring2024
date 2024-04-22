@@ -74,12 +74,12 @@ def main():
             data.l1_button = joystick.get_button(9)
             data.x_button = joystick.get_button(0)
             data.y_button = joystick.get_button(1)
-
+            print( data.y_button)
             # Send the data to the server
             packed_data = struct.pack("=7h4?", data.seq, data.left_x, data.left_y, data.right_x, data.right_y, data.l2_trigger, data.r2_trigger, data.r1_button, data.l1_button, data.x_button, data.y_button)
             client_socket.sendall(packed_data)
             # print(packed_data)
-            print(f"Data sent successfully: {len(packed_data)} bytes")
+            # print(f"Data sent successfully: {len(packed_data)} bytes")
 
             data.seq += 1
             delay(65) # TODO: change this value to change the transfer speed

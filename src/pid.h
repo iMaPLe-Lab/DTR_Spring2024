@@ -6,9 +6,9 @@ double previous_error_yaw = 0;
 double previous_error_altitude = 0;
 
 // PID constants
-const double kp = 2.5;
-const double ki = 0;
-const double kd = 15;
+double kp = 2.0;
+double ki = 0.0;
+double kd = 0.05;
 
 double kp_alt = 10;
 double ki_alt = 0;
@@ -17,6 +17,30 @@ double kd_alt = 0;
 const double kp_f = 1;
 const double ki_f = 0;
 const double kd_f = 0;
+
+
+void updatePID(String data) {
+  // Find positions of each parameter in the received data
+  int pIndex = data.indexOf('P');
+  int iIndex = data.indexOf('I');
+  int dIndex = data.indexOf('D');
+  int endIndex = data.length();
+  // Extract each parameter's value as substring
+  String pValue = data.substring(pIndex + 2, iIndex - 1);
+  String iValue = data.substring(iIndex + 2, dIndex - 1);
+  String dValue = data.substring(dIndex + 2, endIndex - 1);
+  // Convert string to double
+  kp = pValue.toDouble();
+  ki = iValue.toDouble();
+  kd = dValue.toDouble();
+  // Debugging: Output updated values
+  Serial1.print("Updated Pk: ");
+  Serial1.println(kp);
+  Serial1.print("Updated Ik: ");
+  Serial1.println(ki);
+  Serial1.print("Updated Dk: ");
+  Serial1.println(kd);
+}
 
 double angle_difference(double angle1, double angle2) { //angle1 current , angle2 target 
     double difference = angle2 - angle1;

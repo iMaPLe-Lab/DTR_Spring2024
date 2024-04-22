@@ -68,12 +68,13 @@ int setleftandrightSpeeds(int16_t input) {
     return 100.0*(normalizedValue/100.0)*abs(normalizedValue/100.0); // scale to exponential control instead of linear
 }
 
-void processData(Data data, int* ptrLX, int* ptrLY, int* ptrLeftThrottle, int* ptrRY,int* ptrRightThrottle, bool* ptrXButton) {
+void processData(Data data, int* ptrLX, int* ptrLY, int* ptrLeftThrottle, int* ptrRY,int* ptrRightThrottle, bool* ptrXButton, bool* ptrYButton) {
   *ptrLX = data.left_x;
   *ptrLY = data.left_y;
   *ptrLeftThrottle = data.l2_trigger;
   *ptrRY = setleftandrightSpeeds(-data.right_x);
   *ptrRightThrottle = data.r2_trigger;
   *ptrXButton = data.x_button;
+  *ptrYButton = data.y_button;
 }
 
