@@ -119,6 +119,7 @@ void motorSetup()
 
 void setup() {
   Serial.begin(115200);
+  Serial1.begin(115200);
 
   motorSetup();
   sensorSetup();
@@ -130,9 +131,13 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial1.println("Connecting to WiFi...");
+    Serial.println("Connecting to WiFi...");
   }
   Serial1.println("Connected to WiFi");
   Serial1.println(WiFi.localIP());
+
+  Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
   // Start the server
   server.begin();
 
@@ -168,17 +173,20 @@ void loop() {
         
         /******************* ALITITUDE CONTROL *******************/
         readTOF();
-        Serial1.printf( "Alt: %04icm ", tfDist);
-        Serial1.print(", Target Alt: ");
-        Serial1.println(target_alt);
-        // target_alt = target_alt + leftJoystickY*0.1;
-        // if (target_alt < 0){
-        //   target_alt = 0;
-        // }
+        // Serial1.printf( "Alt: %04icm ", tfDist);
+        // Serial1.print(", Target Alt: ");
+        // Serial1.println(target_alt);
 
-        double alt_pid = 100+constrain(computePID_altitude(target_alt, tfDist), 0, 500);
-        Serial1.print("Altitude PID value: ");
-        Serial1.println(alt_pid);
+        // Serial.printf( "Alt: %04icm ", tfDist);
+        // Serial.print(", Target Alt: ");
+        // Serial.println(target_alt);
+
+        double alt_pid = 200+constrain(computePID_altitude(target_alt, tfDist), 0, 500);
+        // Serial1.print("Altitude PID value: ");
+        // Serial1.println(alt_pid);
+
+        // Serial.print("Altitude PID value: ");
+        // Serial.println(alt_pid);
 
         if (abs(leftJoystickY) > 0) {
           *ptr_speedEscAltitude = leftJoystickY*6; // manual up and down
@@ -194,23 +202,28 @@ void loop() {
 
 
         /******************* DIRECTION/YAW CONTROL *******************/
-        // readIMU();
-        // Serial.print("Yaw: ");
-        // Serial.print(ypr.yaw);
-        // Serial.print(", Target Yaw: ");
-        // Serial.println(target_yaw);
+        readIMU();
+        Serial1.print("Yaw: ");
+        Serial1.print(ypr.yaw);
+        Serial1.print(", Target Yaw: ");
+        Serial1.println(target_yaw);
 
         int leftMotorSpeed = map(max(0, -rightJoystickY), 0, 100, 0, 100);
         int rightMotorSpeed = map(max(0, rightJoystickY), 0, 100, 0, 100);
 
-        // if (is_turning && abs(rightJoystickY) < 5) { // Just stopped turning
-        //   is_turning = false;
-        //   target_yaw = ypr.yaw; // set yaw position to hold
-        // }
-        // Serial.print("Yaw PID value: ");
-        // double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -350, 350);
-        // double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -200, 200);
-        // Serial.println(yaw_pid);
+        if (is_turning && abs(rightJoystickY) < 5) { // Just stopped turning
+          is_turning = false;
+          target_yaw = ypr.yaw; // set yaw position to hold
+        }
+        
+        double yaw_pid = constrain(computePID_yaw(target_yaw, ypr.yaw), -350, 350);
+        double yaw_pid_fw = constrain(computePID_yaw_fw(target_yaw, ypr.yaw), -300, 300);
+
+        Serial1.print("Yaw PID: ");
+        Serial1.print(yaw_pid);
+        Serial1.print(", Yaw PID FWD: ");
+        Serial1.println(yaw_pid_fw);
+
 
         if(rightJoystickY!=0){ // if turning
           is_turning = true;
@@ -234,17 +247,24 @@ void loop() {
           }
 
         } else if(rightThrottle == 0 ){ // backward?
-          *ptr_speedEscLeft =  constrain(leftThrottle*7, -700, 700);
-          *ptr_speedEscRight = -constrain(leftThrottle*7, -700, 700);
+          *ptr_speedEscLeft =  constrain(leftThrottle*7+yaw_pid_fw, -700, 700);
+          *ptr_speedEscRight = -constrain(leftThrottle*7+yaw_pid_fw, -700, 700);
         } else if(rightThrottle != 0){ // forward?
           
-          *ptr_speedEscLeft = -constrain(rightThrottle*7, -700, 700);
-          *ptr_speedEscRight =  constrain(rightThrottle*7,-700, 700);
+          *ptr_speedEscLeft = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700);
+          *ptr_speedEscRight =  constrain(rightThrottle*7+yaw_pid_fw,-700, 700);
         } 
-        // else if(R2==0 && rightJoystickX == 0 ){ // hold yaw angle
-        //   // *ptr_speedEsc1 = -yaw_pid;
-        //   // *ptr_speedEsc2 = -yaw_pid;
-        // }
+        else if(R2==0 && rightJoystickX == 0 ){ // hold yaw angle
+          *ptr_speedEscLeft = -yaw_pid;
+          *ptr_speedEscRight = -yaw_pid;
+        }
+
+        Serial1.print("Altitude Power: ");
+        Serial1.print(speedEscAltitude);
+        Serial1.print(", Left Power: ");
+        Serial1.print(speedEscLeft);
+        Serial1.print(", Right Power: ");
+        Serial1.println(speedEscRight);
 
 
         /******************* CAPTURE CONTROL *******************/
@@ -270,5 +290,6 @@ void loop() {
     }
     client.stop();
     Serial1.println("Client disconnected");
+    Serial.println("Client disconnected");
   }
 }

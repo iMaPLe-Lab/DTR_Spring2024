@@ -32,8 +32,10 @@ int16_t tfTemp = 0;       // Internal temperature of Lidar sensor chip
 
 void setReports(sh2_SensorId_t reportType, long report_interval) {
   Serial.println("Setting desired reports");
+  Serial1.println("Setting desired reports");
   if (! bno08x.enableReport(reportType, report_interval)) {
     Serial.println("Could not enable stabilized remote vector");
+    Serial1.println("Could not enable stabilized remote vector");
   }
 }
 
@@ -68,6 +70,7 @@ void quaternionToEulerGI(sh2_GyroIntegratedRV_t* rotational_vector, euler_t* ypr
 void readIMU(){
   if (bno08x.wasReset()) {
     Serial.print("sensor was reset ");
+    Serial1.print("sensor was reset ");
     setReports(reportType, reportIntervalUs);
   }
   
@@ -116,9 +119,11 @@ void sensorSetup() {
 
   if (!bno08x.begin_I2C(0x4A, &Wire1)) {
     Serial.println("Failed to find BNO08x chip");
+    Serial1.println("Failed to find BNO08x chip");
     while (1) yield();
   }
   Serial.println("BNO08x ok ");
+  Serial1.println("BNO08x ok ");
 
   setReports(reportType, reportIntervalUs);
 
@@ -129,19 +134,24 @@ void sensorSetup() {
   target_yaw = ypr.yaw;
   Serial.print("Initial target yaw: ");
   Serial.println(target_yaw);
+  Serial1.print("Initial target yaw: ");
+  Serial1.println(target_yaw);
 
   //////////// TOF setup ////////////
   Serial.printf( "System reset: ");
+  Serial1.printf( "System reset: ");
   if( tfmP.sendCommand( SOFT_RESET, 0))
   {
-      printf( "passed.\r\n");
+    Serial.printf( "passed.\r\n");
+    Serial1.printf( "passed.\r\n");
   }
   else tfmP.printReply();
 
   Serial.printf( "Enable Output: ");
   if( tfmP.sendCommand( ENABLE_OUTPUT, 0))
   {
-      printf( "passed.\r\n");
+    Serial.printf( "passed.\r\n");
+    Serial1.printf( "passed.\r\n");
   }
   else tfmP.printReply();
 

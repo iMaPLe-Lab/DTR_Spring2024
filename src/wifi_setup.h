@@ -35,13 +35,17 @@ Data readControllerData(WiFiClient& client) {
             // Serial.printf("seq %d left_x %d left_y %d right_x %d right_y %d l2_trigger %d r2_trigger %d r1_button %d l1_button %d x_button %d y_button %d \n", 
             //             (short)data.seq, (short)data.left_x, (short)data.left_y, (short)data.right_x, (short)data.right_y, (short)data.l2_trigger, (short)data.r2_trigger,
             //              (bool)data.r1_button, (bool)data.l1_button, (bool)data.x_button, (bool)data.y_button);
-            if (data.seq != seqExpected)  // check sequence number received
+            if (data.seq != seqExpected) {
+                // check sequence number received
                 Serial.printf("Error! seq expected %d received %d\n", seqExpected, data.seq);
+                Serial1.printf("Error! seq expected %d received %d\n", seqExpected, data.seq);
+            } 
             seqExpected = data.seq;  // set sequence number ready for next data
             seqExpected++;
         } else {
             while (client.available()) Serial.print((char)client.read());  // discard corrupt packet
             Serial.printf("corrupt packet, expected %d bytes \n", sizeof(data));
+            Serial1.printf("corrupt packet, expected %d bytes \n", sizeof(data));
         }
             
     }
@@ -57,8 +61,11 @@ int mapValue(int16_t value) {
 
 int setleftandrightSpeeds(int16_t input) {
     int normalizedValue = input;
+
     // Normalize input from -99 - 100 to -100 - 100 for easier calculations
-    return map(normalizedValue, -100, 100, -100, 100);
+    normalizedValue = map(normalizedValue, -100, 100, -100, 100);
+    
+    return 100.0*(normalizedValue/100.0)*abs(normalizedValue/100.0); // scale to exponential control instead of linear
 }
 
 void processData(Data data, int* ptrLX, int* ptrLY, int* ptrLeftThrottle, int* ptrRY,int* ptrRightThrottle, bool* ptrXButton) {
