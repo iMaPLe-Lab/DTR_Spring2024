@@ -28,12 +28,15 @@ int rightJoystickY = 0; // (-100 - 100) right Y axis
 /// bool
 bool XButton = 0;
 bool YButton = 0;
+bool L1=0;
+bool R1=0;
 bool toggle = 0;
 bool last_toggle = 0;
 bool catch_flag = 0;
 bool update_flag = 0;
 bool update_toggle = 0;
 bool update_last_toggle = 0;
+bool forward_flag = 0;
 
 // pointers
 int *ptrLeftJoystickX = &leftJoystickX;
@@ -42,7 +45,8 @@ int *ptrLeftThrottle = &leftThrottle;
 int *ptrRightThrottle = &rightThrottle;
 int *ptrRightJoystickX = &rightJoystickX;
 int *ptrRightJoystickY = &rightJoystickY;
-
+bool *ptrL1 = &L1;
+bool *ptrR1 = &R1;
 bool *ptrYButton = &YButton;
 bool *ptrXButton = &XButton;
 
@@ -155,7 +159,7 @@ void loop()
       {
         Data data = readControllerData(client); // get controller values
 
-        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton, ptrYButton); // map recieved controller values to pointers
+        processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton, ptrYButton, ptrR1,ptrL1); // map recieved controller values to pointers
 
 
         /******************* ALITITUDE CONTROL *******************/
@@ -231,6 +235,13 @@ void loop()
         }
         else if (rightThrottle != 0 && leftThrottle == 0)
         { // forward
+          if (forward_flag == 1){
+            *ptr_speedEscRight=0;
+            *ptr_speedEscLeft=0;
+            delay(10);
+            forward_flag =0;
+
+          }
           *ptr_speedEscRight = -rightThrottle * 7;
           *ptr_speedEscLeft = -rightThrottle * 7;
           // *ptr_speedEscLeft  = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //+yaw_pid_fw
@@ -245,8 +256,10 @@ void loop()
         }
         else if (rightThrottle == 0 && leftThrottle == 0)
         { // hold yaw angle
-          *ptr_speedEscRight = -yaw_pid;
-          *ptr_speedEscLeft = yaw_pid;
+          // *ptr_speedEscRight = -yaw_pid;
+          // *ptr_speedEscLeft = yaw_pid;
+          *ptr_speedEscRight = 0;
+          *ptr_speedEscLeft = 0;
         }
 
         /******************* CAPTURE CONTROL *******************/
@@ -281,13 +294,14 @@ void loop()
         // unsigned long lastCheckTime = 0; // Timestamp of the last check
         if (update_flag)
         { // If x is true, move servo to 90 degrees
-          Serial1.println("Ready to update data");
-          if (Serial1.available())
-          {
-            String serialdata = Serial1.readStringUntil(';'); // Read data until semicolon
-            updatePID(serialdata);                            // Function to parse data and update PID values
-          }
-          update_toggle = false; // Reset x back to false after acting on it
+          // Serial1.println("Ready to update data");
+          // if (Serial1.available())
+          // {
+          //   String serialdata = Serial1.readStringUntil(';'); // Read data until semicolon
+          //   updatePID(serialdata);                            // Function to parse data and update PID values
+          // }
+          // update_toggle = false; // Reset x back to false after acting on it
+          // forward_flag=1;
         }
         else
         {
