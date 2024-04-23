@@ -72,6 +72,8 @@ int *ptr_speedEscLeft = &speedEscLeft;
 
 bool is_turning = false;
 bool is_manual_alt = false;
+bool is_auto = false;
+bool last_auto_toggle = 0;
 
 void escUpdateTask(void *parameter)
 {
@@ -205,6 +207,7 @@ void loop()
         if (rightJoystickY != 0)
         { // if turning
           is_turning = true;
+          is_auto = false;
 
           if (rightThrottle > 0)
           { // turn and move forward
@@ -235,32 +238,41 @@ void loop()
         }
         else if (rightThrottle != 0 && leftThrottle == 0)
         { // forward
-          if (forward_flag == 1){
-            *ptr_speedEscRight=0;
-            *ptr_speedEscLeft=0;
-            delay(10);
-            forward_flag =0;
-
-          }
+          // if (forward_flag == 1){
+          //   *ptr_speedEscRight = 0;
+          //   *ptr_speedEscLeft  = 0;
+          //   delay(10);
+          //   forward_flag =0;
+          // }
           *ptr_speedEscRight = -rightThrottle * 7;
-          *ptr_speedEscLeft = -rightThrottle * 7;
-          // *ptr_speedEscLeft  = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //+yaw_pid_fw
-          // *ptr_speedEscRight = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //-+yaw_pid_fw
+          *ptr_speedEscLeft  = -rightThrottle * 7;
+          // *ptr_speedEscLeft  = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700);
+          // *ptr_speedEscRight = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700);
         }
         else if (rightThrottle == 0 && leftThrottle != 0)
         { // backward
           *ptr_speedEscRight = leftThrottle * 7;
-          *ptr_speedEscLeft = leftThrottle * 7;
-          // *ptr_speedEscLeft  = constrain(leftThrottle*7+yaw_pid_fw, -700, 700); //- +yaw_pid_fw
-          // *ptr_speedEscRight = constrain(leftThrottle*7+yaw_pid_fw,-700, 700);//+yaw_pid_fw
+          *ptr_speedEscLeft  = leftThrottle * 7;
+          // *ptr_speedEscLeft  = constrain(leftThrottle*7+yaw_pid_fw, -700, 700);
+          // *ptr_speedEscRight = constrain(leftThrottle*7+yaw_pid_fw,-700, 700);
         }
         else if (rightThrottle == 0 && leftThrottle == 0)
         { // hold yaw angle
-          // *ptr_speedEscRight = -yaw_pid;
-          // *ptr_speedEscLeft = yaw_pid;
+          if(is_auto){
+            target_alt = 712; // TODO find actual goal height
+            *ptr_speedEscRight = -yaw_pid;
+            *ptr_speedEscLeft  =  yaw_pid;
+          } else {
           *ptr_speedEscRight = 0;
-          *ptr_speedEscLeft = 0;
+          *ptr_speedEscLeft  = 0;
+          }
+
         }
+        /******************* AUTO CONTROL *******************/
+        if (!is_auto && last_auto_toggle == 1 && L1 == 0) {
+          is_auto = true;
+        }
+        last_auto_toggle = L1;
 
         /******************* CAPTURE CONTROL *******************/
         if (last_toggle == 1 && XButton == 0)
@@ -305,7 +317,11 @@ void loop()
         }
         else
         {
-          Serial1.print("Altitude Power: ");
+          Serial1.print("Altitude: ");
+          Serial1.print(tfDist);
+          Serial1.print(", Is Auto: ");
+          Serial1.print(is_auto);
+          Serial1.print(", Altitude Power: ");
           Serial1.print(speedEscAltitude);
           Serial1.print(", Left Power: ");
           Serial1.print(speedEscLeft);
