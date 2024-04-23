@@ -55,7 +55,7 @@ double angle_difference(double angle1, double angle2) { //angle1 current , angle
 
 double computePID_yaw(double goal_yaw, double current_yaw) {
   double error_yaw = angle_difference(current_yaw, goal_yaw);
-  Serial1.println(error_yaw);
+  // Serial1.println(error_yaw);
   integral_yaw += error_yaw;
   double derivative_yaw = error_yaw - previous_error_yaw;
   previous_error_yaw = error_yaw;

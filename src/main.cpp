@@ -47,16 +47,11 @@ bool *ptrYButton = &YButton;
 bool *ptrXButton = &XButton;
 
 // Value
-int alt_offset = 120;
+int alt_offset = 66;
 unsigned long lastUpdate = 0;              // Stores the last update time
 const unsigned long updateInterval = 3000; // Update interval in milliseconds (500ms)
 double target_alt = 0;                     // cm
-// int powerLeft = 0;
-// int powerRight = 0;
-// int powerUp = 0;
-// int forward = 0;
-// int turn = 0;
-// int up = 0;
+
 /// @esc ///
 DShotESC esc0;
 DShotESC esc1;
@@ -162,6 +157,7 @@ void loop()
 
         processData(data, ptrLeftJoystickX, ptrLeftJoystickY, ptrLeftThrottle, ptrRightJoystickY, ptrRightThrottle, ptrXButton, ptrYButton); // map recieved controller values to pointers
 
+
         /******************* ALITITUDE CONTROL *******************/
         readTOF();
 
@@ -235,22 +231,20 @@ void loop()
         }
         else if (rightThrottle != 0 && leftThrottle == 0)
         { // forward
-
-          *ptr_speedEscRight = -rightThrottle * 7; //+yaw_pid_fw
-          *ptr_speedEscLeft = -rightThrottle * 7;  //-+yaw_pid_fw
+          *ptr_speedEscRight = -rightThrottle * 7;
+          *ptr_speedEscLeft = -rightThrottle * 7;
           // *ptr_speedEscLeft  = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //+yaw_pid_fw
           // *ptr_speedEscRight = -constrain(rightThrottle*7+yaw_pid_fw, -700, 700); //-+yaw_pid_fw
         }
         else if (rightThrottle == 0 && leftThrottle != 0)
-        {                                        // backward,,
-          *ptr_speedEscRight = leftThrottle * 7; //- +yaw_pid_fw
-          *ptr_speedEscLeft = leftThrottle * 7;  //+yaw_pid_fw
+        { // backward
+          *ptr_speedEscRight = leftThrottle * 7;
+          *ptr_speedEscLeft = leftThrottle * 7;
           // *ptr_speedEscLeft  = constrain(leftThrottle*7+yaw_pid_fw, -700, 700); //- +yaw_pid_fw
           // *ptr_speedEscRight = constrain(leftThrottle*7+yaw_pid_fw,-700, 700);//+yaw_pid_fw
         }
-        else if (rightThrottle == 0 && leftThrottle == 0 && abs(leftJoystickY) > 0)
+        else if (rightThrottle == 0 && leftThrottle == 0)
         { // hold yaw angle
-          // Serial1.print("Hold in place");
           *ptr_speedEscRight = -yaw_pid;
           *ptr_speedEscLeft = yaw_pid;
         }
@@ -260,7 +254,6 @@ void loop()
         {
           catch_flag = !catch_flag;
         }
-
         last_toggle = XButton;
 
         unsigned long currentMillis = millis(); // Current time in milliseconds
@@ -277,15 +270,11 @@ void loop()
           myservo.write(0);
         }
 
-        // Serial1.println(YButton);
-
-        /******************* Update CONTROL *******************/
+        /******************* UPDATE CONTROL *******************/
         if (update_last_toggle == 1 && YButton == 0)
         {
-
           update_flag = !update_flag;
         }
-
         update_last_toggle = YButton;
 
         // unsigned long currentMillis = millis(); // Current time in milliseconds
@@ -295,7 +284,6 @@ void loop()
           Serial1.println("Ready to update data");
           if (Serial1.available())
           {
-
             String serialdata = Serial1.readStringUntil(';'); // Read data until semicolon
             updatePID(serialdata);                            // Function to parse data and update PID values
           }
@@ -311,9 +299,10 @@ void loop()
           Serial1.println(speedEscRight);
         }
       }
-      client.stop();
-      Serial1.println("Client disconnected");
-      Serial.println("Client disconnected");
+      
     }
+    client.stop();
+    Serial1.println("Client disconnected");
+    Serial.println("Client disconnected");
   }
 }
